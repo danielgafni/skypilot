@@ -210,6 +210,21 @@ class TestMountCachedConfig:
                 backend_flag_prefix='gcs')
         mock_warn.assert_not_called()
 
+    def test_rclone_flags_appended_and_quoted(self):
+        config = storage_lib.MountCachedConfig(
+            transfers=8, rclone_flags=['--no-modtime', '--exclude', '*.tmp'])
+        flags = config.to_rclone_flags()
+        # Appended last, after the generated flags.
+        assert flags.endswith("--no-modtime --exclude '*.tmp'")
+        # A token with shell metacharacters is quoted.
+        assert "'*.tmp'" in flags
+
+    def test_rclone_flags_none_emits_nothing_extra(self):
+        base = storage_lib.MountCachedConfig(transfers=8).to_rclone_flags()
+        with_empty = storage_lib.MountCachedConfig(
+            transfers=8, rclone_flags=[]).to_rclone_flags()
+        assert base == with_empty
+
     def test_round_trip_yaml(self):
         config = storage_lib.MountCachedConfig(transfers=8, read_only=True)
         yaml_dict = config.to_yaml_config()

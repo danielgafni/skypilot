@@ -824,6 +824,14 @@ def get_storage_schema():
                                 'type': 'string',
                                 'pattern': rclone_memory_pattern,
                             },
+                            # extra `rclone mount` flags as shell tokens,
+                            # forwarded verbatim.
+                            'rclone_flags': {
+                                'type': 'array',
+                                'items': {
+                                    'type': 'string',
+                                },
+                            },
                         },
                     },
                     'mount': {

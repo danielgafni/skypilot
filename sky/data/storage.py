@@ -472,6 +472,10 @@ class MountCachedConfig:
     # Chunk size for multipart uploads (e.g. "64M").
     # rclone flag: --<backend>-chunk-size
     chunk_size: Optional[str] = None
+    # Extra flags forwarded verbatim to `rclone mount`, as shell tokens
+    # (e.g. ["--vfs-read-chunk-size-limit", "2G", "--no-modtime"]).
+    # They override the flags generated from the other fields.
+    rclone_flags: Optional[List[str]] = None
 
     def to_rclone_flags(self, backend_flag_prefix: Optional[str] = None) -> str:
         """Convert non-None fields to rclone CLI flag string.
@@ -526,6 +530,10 @@ class MountCachedConfig:
                 if self.chunk_size is not None:
                     flags.append(f'--{backend_flag_prefix}-chunk-size '
                                  f'{self.chunk_size.upper()}')
+        # User-provided escape-hatch flags, appended last so they take
+        # precedence. Quote each token to guard against shell injection.
+        if self.rclone_flags:
+            flags.extend(shlex.quote(flag) for flag in self.rclone_flags)
         return ' '.join(flags)
 
     def to_yaml_config(self) -> Dict[str, Any]:
